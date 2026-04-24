@@ -1,0 +1,600 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const node_assert_1 = __importDefault(require("node:assert"));
+const describe_query_1 = require("../src/describe-query");
+const queryExectutor_1 = require("../src/queryExectutor");
+const Either_1 = require("fp-ts/lib/Either");
+describe('Test parse select with subqueries', () => {
+    let client;
+    before(() => __awaiter(void 0, void 0, void 0, function* () {
+        client = yield (0, queryExectutor_1.createMysqlClientForTest)('mysql://root:password@localhost/mydb');
+    }));
+    //.only
+    it('parse a select with nested select', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select id from mytable1
+        ) t
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with nested select2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id, name from (
+            select t1.id, t2.name from mytable1 t1
+            inner join mytable2 t2 on t1.id = t2.id
+        ) t
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't'
+                },
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 't'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with nested select and alias', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select value as id from mytable1
+        ) t1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: false,
+                    table: 't1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with nested select and alias 2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id as code from (
+            select value as id from mytable1
+        ) t1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'code',
+                    type: 'int',
+                    notNull: false,
+                    table: 't1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select * from (subquery)', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select * from (
+            select name, name as id from mytable2
+        ) t2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'id',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select * from (subquery) where', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select * from (
+            select name, name as id from mytable2
+        ) t2
+        WHERE t2.id = ? and t2.name = ?
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: true, //if pass null on parameters the result query will be empty
+                    table: 't2'
+                },
+                {
+                    name: 'id',
+                    type: 'varchar',
+                    notNull: true, //if pass null on parameters the result query will be empty
+                    table: 't2'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'varchar',
+                    notNull: true
+                },
+                {
+                    name: 'param2',
+                    columnType: 'varchar',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with 3-levels nested select', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select id from (
+                select id from mytable1
+            ) t1
+        ) t2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with 3-levels nested select and case expression', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select id from (
+                select id+id as id from mytable1
+            ) t1
+        ) t2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'bigint',
+                    notNull: true,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('nested with *', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT * from (select * from (select id, name from mytable2) t1) t2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with 3-levels nested select (with alias)', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select matricula as id from (
+                select name as matricula from mytable2
+            ) t1
+        ) t2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with 3-levels nested select and union', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select id from (
+                select id from (
+                    select id from mytable1
+                    union
+                    select name as id from mytable2
+                ) t1
+            ) t2
+        ) t3
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 't3'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with 3-levels nested select and union int return', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select id from (
+            select id from (
+                select id from (
+                    select id from mytable1
+                    union
+                    select id from mytable2
+                ) t1
+            ) t2
+        ) t3
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't3'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select name from mytable1, (select count(*) as name from mytable2) t2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select name from mytable1, (select count(*) as name from mytable2) t2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'bigint',
+                    notNull: true,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select name from mytable2 where exists ( select id from mytable1 where value = ?)', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select name from mytable2 where exists ( select id from mytable1 where value = ?)
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 'mytable2'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'int',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select name from mytable2 where not exists ( select id from mytable1 where id = :a and value = :b)', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = 'select name from mytable2 where not exists ( select id from mytable1 where id = :a and value = :b)';
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql: 'select name from mytable2 where not exists ( select id from mytable1 where id = ? and value = ?)',
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: false,
+                    table: 'mytable2'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'a',
+                    columnType: 'int',
+                    notNull: true
+                },
+                {
+                    name: 'b',
+                    columnType: 'int',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT * from (SELECT * FROM mytable1) as t1 WHERE t1.id > ?', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT id from (SELECT * FROM mytable1) as t1 WHERE t1.id > ?
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't1'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'int',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT id, exists(SELECT 1 FROM mytable2 t2 where t2.id = t1.id) as has from mytable1 t1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT id, exists(SELECT 1 FROM mytable2 t2 where t2.id = t1.id) as has from mytable1 t1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'has',
+                    type: 'int',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT id, (select max(id) from mytable2 m2 where m2.id =1) as subQuery FROM mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+			SELECT
+				id, (select max(id) from mytable2 m2 where m2.id =1) as subQuery
+			FROM mytable1
+			`;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 'mytable1'
+                },
+                {
+                    name: 'subQuery',
+                    type: 'int',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT id, exists(SELECT min(id) FROM mytable2 t2 where t2.id = t1.id) as has from mytable1 t1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+			SELECT id, exists(SELECT min(id) FROM mytable2 t2 where t2.id = t1.id) as has from mytable1 t1
+			`;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'int',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'has',
+                    type: 'int',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+});
+//# sourceMappingURL=parse-select-subqueries.test.js.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"delete-from-roles.js","sourceRoot":"","sources":["../../../../../../tests/sqlite-e2e/sql/crud/roles/delete-from-roles.ts"],"names":[],"mappings":";;AAUA,0CAQC;AARD,SAAgB,eAAe,CAAC,EAAY,EAAE,MAA6B;IAE1E,MAAM,GAAG,GAAG;;cAEC,CAAA;IAEb,OAAO,EAAE,CAAC,OAAO,CAAC,GAAG,CAAC;SACpB,GAAG,CAAC,CAAC,MAAM,CAAC,EAAE,CAAC,CAA0B,CAAC;AAC7C,CAAC"}

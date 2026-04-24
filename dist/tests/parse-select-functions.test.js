@@ -1,0 +1,954 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const node_assert_1 = __importDefault(require("node:assert"));
+const describe_query_1 = require("../src/describe-query");
+const queryExectutor_1 = require("../src/queryExectutor");
+const Either_1 = require("fp-ts/lib/Either");
+describe('Test parse select with functions', () => {
+    let client;
+    before(() => __awaiter(void 0, void 0, void 0, function* () {
+        client = yield (0, queryExectutor_1.createMysqlClientForTest)('mysql://root:password@localhost/mydb');
+    }));
+    //TODO = column sum?
+    it('select sum(value) from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select sum(value) from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'sum(value)',
+                    type: 'decimal',
+                    notNull: false,
+                    table: 'mytable1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select sum(value) as total from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select sum(value) as total from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'total',
+                    type: 'decimal',
+                    notNull: false,
+                    table: 'mytable1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select sum(t1.value) as total from mytable1 t1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select sum(t1.value) as total from mytable1 t1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'total',
+                    type: 'decimal',
+                    notNull: false,
+                    table: 't1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select count(id) from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select count(id) from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'count(id)',
+                    type: 'bigint',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select count(*) from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select count(*) from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'count(*)',
+                    type: 'bigint',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    //TODO - VALUE/2 result decimal
+    it('select sum(2*value) from  mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select sum(2*value) from  mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'sum(2*value)',
+                    type: 'decimal',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select avg(value) from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select avg(value) from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'avg(value)',
+                    type: 'decimal',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select avg(value + (value + 2)) from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select avg(value + (value + 2)) from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'avg(value + (value + 2))',
+                    type: 'decimal',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT AVG(value) as avgResult FROM mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT AVG(value) as avgResult FROM mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'avgResult',
+                    type: 'decimal',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with SUM and with expression from multiple tables', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select sum(t2.id + (t1.value + 2)) from mytable1 t1 inner join mytable2 t2 on t1.id = t2.id
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'sum(t2.id + (t1.value + 2))',
+                    type: 'decimal',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT MIN(value) FROM mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT MIN(value) FROM mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'MIN(value)',
+                    type: 'int',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    //TODO EXPRESSION
+    it('SELECT MIN(name) FROM mytable2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT MIN(name) FROM mytable2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'MIN(name)',
+                    type: 'varchar',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT STR_TO_DATE('21/5/2013','%d/%m/%Y')`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT STR_TO_DATE('21/5/2013','%d/%m/%Y')
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: `STR_TO_DATE('21/5/2013','%d/%m/%Y')`,
+                    type: 'date',
+                    notNull: false, //invalid date
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse select without from clause', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        select 10, CONCAT_WS('a', 'b'), 'a' as name
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: '10',
+                    type: 'int',
+                    notNull: true,
+                    table: ''
+                },
+                {
+                    name: `CONCAT_WS('a', 'b')`, //If the separator is NULL, the result is NULL.
+                    type: 'varchar',
+                    notNull: true,
+                    table: ''
+                },
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with STR_TO_DATE and CONCAT_WS function', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT STR_TO_DATE(CONCAT_WS('/', ?, ?, ?),'%d/%m/%Y')
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: `STR_TO_DATE(CONCAT_WS('/', ?, ?, ?),'%d/%m/%Y')`,
+                    type: 'date',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'varchar',
+                    notNull: true //changed at v0.0.2
+                },
+                {
+                    name: 'param2',
+                    columnType: 'varchar',
+                    notNull: true //changed at v0.0.2
+                },
+                {
+                    name: 'param3',
+                    columnType: 'varchar',
+                    notNull: true //changed at v0.0.2
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT datediff(:date1, :date2) as days_stayed', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = 'SELECT datediff(:date1, :date2) as days_stayed';
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql: 'SELECT datediff(?, ?) as days_stayed',
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'days_stayed',
+                    type: 'bigint',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'date1',
+                    columnType: 'date',
+                    notNull: true
+                },
+                {
+                    name: 'date2',
+                    columnType: 'date',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse a select with datediff function', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT datediff(STR_TO_DATE(CONCAT_WS('/', ?, ?, ?),'%d/%m/%Y'), STR_TO_DATE('01/01/2020','%d/%m/%Y')) as days_stayed
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'days_stayed',
+                    type: 'bigint',
+                    notNull: false, //STR_TO_DATE will return null if pass an invalid date
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'varchar',
+                    notNull: true
+                },
+                {
+                    name: 'param2',
+                    columnType: 'varchar',
+                    notNull: true
+                },
+                {
+                    name: 'param3',
+                    columnType: 'varchar',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    //PERIOD_ADD(period, number); period: YYYYMM
+    it('SELECT PERIOD_ADD(:p1, :p2) as add, PERIOD_DIFF(:p1, :p2) as diff', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = 'SELECT PERIOD_ADD(:p1, :p2) as add_result, PERIOD_DIFF(:p1, :p2) as diff_result';
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql: 'SELECT PERIOD_ADD(?, ?) as add_result, PERIOD_DIFF(?, ?) as diff_result',
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'add_result',
+                    type: 'bigint',
+                    notNull: true,
+                    table: ''
+                },
+                {
+                    name: 'diff_result',
+                    type: 'bigint',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'p1',
+                    columnType: 'bigint',
+                    notNull: true
+                },
+                {
+                    name: 'p2',
+                    columnType: 'bigint',
+                    notNull: true
+                },
+                {
+                    name: 'p1',
+                    columnType: 'bigint',
+                    notNull: true
+                },
+                {
+                    name: 'p2',
+                    columnType: 'bigint',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT IFNULL(NULL, 'yes') as result1, IFNULL('10', 'yes') as result2`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IFNULL(NULL, 'yes') as result1, IFNULL('10', 'yes') as result2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result1',
+                    type: 'varchar',
+                    notNull: true,
+                    table: ''
+                },
+                {
+                    name: 'result2',
+                    type: 'varchar',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT IFNULL(value, id) as result from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IFNULL(value, id) as result from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'int',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT GROUP_CONCAT(name) FROM mytable2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT GROUP_CONCAT(name) FROM mytable2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'GROUP_CONCAT(name)',
+                    type: 'varchar',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT GROUP_CONCAT(id) FROM mytable2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT GROUP_CONCAT(id) FROM mytable2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'GROUP_CONCAT(id)',
+                    type: 'varchar',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT GROUP_CONCAT(DISTINCT name ORDER BY id DESC SEPARATOR ';') FROM mytable2`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT GROUP_CONCAT(DISTINCT name ORDER BY id DESC SEPARATOR ';') as result
+        FROM mytable2
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'varchar',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT IF(1>2,2,3) as result', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IF(1>2,2,3) as result
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'int',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT IF(1>2,'a','b') as result`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IF(1>2,'a','b') as result
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'varchar',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT IF(1>2, NULL,'b') as result`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IF(1>2, NULL,'b') as result
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'varchar',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT IF(1>2,'a',NULL) as result`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IF(1>2,'a',NULL) as result
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'varchar',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT IF(1>2, id, ?) as result FROM mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT IF(1>2, id, ?) as result FROM mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'int',
+                    notNull: true,
+                    table: 'mytable1' //correct?
+                }
+            ],
+            parameters: [
+                {
+                    columnType: 'int',
+                    name: 'param1',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT NULLIF(?, 'a') FROM mytable1`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT NULLIF(?, 'a') FROM mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: `NULLIF(?, 'a')`,
+                    type: 'varchar',
+                    notNull: false,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    columnType: 'varchar',
+                    name: 'param1',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT CAST('a' AS CHAR(5)) as result`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT CAST('a' AS CHAR(5)) as result
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'result',
+                    type: 'char',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT md5('a') as md5`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT md5('a') as md5
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'md5',
+                    type: 'char',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('SELECT md5(id + ?) as md5 from mytable1', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT md5(id + ?) as md5 from mytable1
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'md5',
+                    type: 'char',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'double',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it(`SELECT hex('a') as r1, unhex(hex('a')) as r2, hex(NULL) as r3, unhex(NULL) as r4, unhex(hex(?)) as r5`, () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT hex('a') as r1, unhex(hex('a')) as r2, hex(NULL) as r3, unhex(hex(NULL)) as r4, unhex(hex(?)) as r5
+        `;
+        const actual = yield (0, describe_query_1.parseSql)(client, sql);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'r1',
+                    type: 'char',
+                    notNull: true,
+                    table: ''
+                },
+                {
+                    name: 'r2',
+                    type: 'char',
+                    notNull: true,
+                    table: ''
+                },
+                {
+                    name: 'r3',
+                    type: 'char',
+                    notNull: false,
+                    table: ''
+                },
+                {
+                    name: 'r4',
+                    type: 'char',
+                    notNull: false,
+                    table: ''
+                },
+                {
+                    name: 'r5',
+                    type: 'char',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'varchar', //could be varchar | number
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+});
+//# sourceMappingURL=parse-select-functions.test.js.map

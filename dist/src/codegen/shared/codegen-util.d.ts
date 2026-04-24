@@ -1,0 +1,74 @@
+import CodeBlockWriter from 'code-block-writer';
+import { CamelCaseName, QueryType, TsFieldDescriptor, TsParameterDescriptor } from '../../types';
+import { DynamicSqlInfoResult, DynamicSqlInfoResult2, SelectFragmentResult } from '../../mysql-query-analyzer/types';
+import { NestedTsDescriptor, RelationType2 } from '../../ts-nested-descriptor';
+export type TsDescriptor = {
+    sql: string;
+    queryType: QueryType;
+    returning?: true;
+    multipleRowsResult: boolean;
+    columns: TsFieldDescriptor[];
+    parameterNames: ParamInfo[];
+    parameters: TsParameterDescriptor[];
+    data?: TsParameterDescriptor[];
+    orderByColumns?: string[];
+    nestedDescriptor?: NestedTsDescriptor;
+    nestedDescriptor2?: RelationType2[];
+    dynamicQuery?: DynamicSqlInfoResult;
+    dynamicQuery2?: DynamicSqlInfoResult2;
+};
+export type ParamInfo = {
+    name: string;
+    isList: boolean;
+};
+export type TypeNames = {
+    camelCaseName: string;
+    capitalizedName: string;
+    dataTypeName: string;
+    resultTypeName: string;
+    paramsTypeName: string;
+    orderByTypeName: string;
+    dynamicParamsTypeName: string;
+    selectColumnsTypeName: string;
+    whereTypeName: string;
+};
+export declare function createCodeBlockWriter(): CodeBlockWriter;
+export declare function capitalize(name: CamelCaseName): string;
+export declare function convertToCamelCaseName(name: string): CamelCaseName;
+export declare function createTypeNames(queryName: string): TypeNames;
+export declare function generateRelationType(functionName: string, relationName: string): string;
+export declare function removeDuplicatedParameters2(parameters: TsFieldDescriptor[]): TsFieldDescriptor[];
+export declare function renameInvalidNames(columnNames: string[]): string[];
+export declare function escapeInvalidTsField(columnName: string): string;
+export declare function hasStringColumn(columns: TsFieldDescriptor[]): boolean;
+export declare function writeBuildOrderByBlock(writer: CodeBlockWriter, orderByColumns: string[], orderByTypeName: string): void;
+export declare function writeDynamicQueryParamType(writer: CodeBlockWriter, queryName: string, hasParams: boolean, orderByField: string | undefined): void;
+export declare function writeSelectFragements(writer: CodeBlockWriter, selectFragements: SelectFragmentResult[], columns: TsFieldDescriptor[]): void;
+export declare function writeDynamicQueryOperators(writer: CodeBlockWriter, whereTypeName: string, columns: TsFieldDescriptor[]): void;
+export declare function writeWhereConditionFunction(writer: CodeBlockWriter, whereTypeName: string, columns: TsFieldDescriptor[]): void;
+export declare function writeWhereConditionsToObjectFunction(writer: CodeBlockWriter, whereTypeName: string): void;
+export type BuildSqlFunction = {
+    dynamicParamsTypeName: string;
+    dynamicQueryInfo: DynamicSqlInfoResult2;
+    columns: TsFieldDescriptor[];
+    parameters: TsParameterDescriptor[];
+    dialect: 'sqlite' | 'postgres';
+    hasOrderBy: boolean;
+    toDrive: (variable: string, param: TsParameterDescriptor) => string;
+};
+export declare function writeBuildSqlFunction(writer: CodeBlockWriter, params: BuildSqlFunction): void;
+type MapToResultParameters = {
+    columns: TsFieldDescriptor[];
+    resultTypeName: string;
+    selectColumnsTypeName: string;
+    fromDriver: (variable: string, field: TsFieldDescriptor) => string;
+};
+export declare function writeMapToResultFunction(writer: CodeBlockWriter, params: MapToResultParameters): void;
+export declare function writeOrderByToObjectFunction(writer: CodeBlockWriter, dynamicParamsTypeName: string): void;
+export declare function writeResultType(writer: CodeBlockWriter, resultTypeName: string, columns: TsFieldDescriptor[]): void;
+export declare function writeNestedTypes(writer: CodeBlockWriter, relations: RelationType2[], captalizedName: string): void;
+export declare function writeCollectFunction(writer: CodeBlockWriter, relation: RelationType2, columns: TsFieldDescriptor[], capitalizedName: string, resultTypeName: string): void;
+export declare function writeGroupByFunction(writer: CodeBlockWriter): void;
+export declare function writeSql(writer: CodeBlockWriter, sql: string): void;
+export {};
+//# sourceMappingURL=codegen-util.d.ts.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"case-nullability-checker.d.ts","sourceRoot":"","sources":["../../../src/postgres-query-analyzer/case-nullability-checker.ts"],"names":[],"mappings":"AAAA,OAAO,EAA2K,aAAa,EAAE,mBAAmB,EAAoB,MAAM,mDAAmD,CAAC;AAmBlS,wBAAgB,mBAAmB,CAAC,QAAQ,EAAE,mBAAmB,EAAE,MAAM,EAAE,aAAa,GAAG,OAAO,CAWjG"}

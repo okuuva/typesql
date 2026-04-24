@@ -2,9 +2,9 @@
 	"name": "typesql-cli",
 	"version": "0.23.0",
 	"description": "",
-	"main": "index.js",
+	"main": "dist/src/cli.js",
 	"bin": {
-		"typesql": "cli.js"
+		"typesql": "dist/src/cli.js"
 	},
 	"scripts": {
 		"build": "tsc -w",

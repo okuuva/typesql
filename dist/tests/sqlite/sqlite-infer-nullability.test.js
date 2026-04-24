@@ -1,0 +1,71 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const node_assert_1 = __importDefault(require("node:assert"));
+const sqlite_1 = require("@wsporto/typesql-parser/sqlite");
+const traverse_1 = require("../../src/sqlite-query-analyzer/traverse");
+function getWhereExpr(sql) {
+    const parser = (0, sqlite_1.parseSql)(sql);
+    const sql_stmt = parser.sql_stmt();
+    const whereExpr = sql_stmt.select_stmt().select_core(0)._whereExpr;
+    return whereExpr;
+}
+describe('sqlite-infer-nullability', () => {
+    it('SELECT value FROM mytable1 WHERE value is not null', () => {
+        const sql = 'SELECT value FROM mytable1 WHERE value is not null';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 where 10 > value', () => {
+        const sql = 'select value from mytable1 where 10 > value';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 where value is not null or (id > 0 or value is not null)', () => {
+        const sql = 'select value from mytable1 where value is not null or (id > 0 or value is not null)';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, false); //todo changed
+    });
+    it('select value from mytable1 where value is not null and (id > 0 or value is not null)', () => {
+        const sql = 'select value from mytable1 where value is not null and (id > 0 or value is not null)';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 where value is not null or (id > 0 and (id < 10 and value is not null))', () => {
+        const sql = 'select value from mytable1 where value is not null or (id > 0 and (id < 10 and value is not null))';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 where id > 0 and id < 10 and value > 1', () => {
+        const sql = 'select value from mytable1 where id > 0 and id < 10 and value > 1';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 where value is not null and (value > 1 or value is null)', () => {
+        const sql = 'select value from mytable1 where value is not null and (value > 1 or value is null)';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 where value is not null or (value > 1 and value is null)', () => {
+        const sql = 'select value from mytable1 where value is not null or (value > 1 and value is null)';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'value', table: '' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, true);
+    });
+    it('select value from mytable1 t1 left join mytable2 t2 on t1.id = t2.id where t1.id = 1', () => {
+        const sql = 'select t2.id from mytable1 t1 left join mytable2 t2 on t1.id = t2.id where t1.id = 1';
+        const whereExpr = getWhereExpr(sql);
+        const actual = (0, traverse_1.isNotNull)({ name: 'id', table: 't2' }, whereExpr);
+        node_assert_1.default.deepStrictEqual(actual, false);
+    });
+});
+//# sourceMappingURL=sqlite-infer-nullability.test.js.map

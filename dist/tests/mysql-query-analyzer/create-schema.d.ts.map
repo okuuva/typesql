@@ -1,0 +1,1 @@
+{"version":3,"file":"create-schema.d.ts","sourceRoot":"","sources":["../../../tests/mysql-query-analyzer/create-schema.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,YAAY,EAAE,mBAAmB,EAAE,MAAM,sCAAsC,CAAC;AAC9F,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,uCAAuC,CAAC;AAExE,eAAO,MAAM,QAAQ,EAAE,YAAY,EA4KlC,CAAC;AAEF,eAAO,MAAM,cAAc,EAAE,mBAAmB,CAAC,UAAU,CAAC,EA8qB3D,CAAC"}

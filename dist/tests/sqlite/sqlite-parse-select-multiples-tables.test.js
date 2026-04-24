@@ -1,0 +1,1398 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const node_assert_1 = __importDefault(require("node:assert"));
+const Either_1 = require("fp-ts/lib/Either");
+const parser_1 = require("../../src/sqlite-query-analyzer/parser");
+const create_schema_1 = require("../mysql-query-analyzer/create-schema");
+describe('sqlite-parse-select-multiples-tables', () => {
+    it('parse a basic with inner join', () => __awaiter(void 0, void 0, void 0, function* () {
+        //mytable1 (id, value); mytable2 (id, name, descr)
+        const sql = `
+        SELECT * 
+        FROM mytable1 t1 
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        `;
+        const actual = yield (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: false,
+                    table: 't1'
+                },
+                {
+                    name: 'id', //TODO - rename fields
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('FROM mytable1 as t1 INNER JOIN mytable2 as t2', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT * 
+        FROM mytable1 as t1 
+        INNER JOIN mytable2 as t2 on t2.id = t1.id
+        `;
+        const actual = yield (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: false,
+                    table: 't1'
+                },
+                {
+                    name: 'id', //TODO - rename fields
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select t1.* from inner join', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT t1.* 
+        FROM mytable1 t1 
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        `;
+        const actual = yield (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: false,
+                    table: 't1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select t2.* from inner join', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT t2.* 
+        FROM mytable1 t1 
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        `;
+        const actual = yield (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('select t2.*, t1.* from inner join', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT t2.*, t1.*
+        FROM mytable1 t1 
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        `;
+        const actual = yield (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'id', //TODO - rename field
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: false,
+                    table: 't1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse select with param', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT t1.id
+        FROM mytable1 t1 
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        WHERE t2.id = ?
+        `;
+        const actual = yield (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true, //changed at v0.5.13
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'INTEGER',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('parse select with param 2', () => {
+        const sql = `
+        SELECT t1.id, t2.name, t1.value, t2.descr as description, ? as param1
+        FROM mytable1 t1
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        WHERE t1.id = ? and t2.name = ? and t1.value > ?
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true, //changed at v0.5.13
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: true, //where t1.name = ?; cannot be null
+                    table: 't2'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: true, //where t1.value = ?; cannot be null
+                    table: 't1'
+                },
+                {
+                    name: 'description',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'param1',
+                    type: 'any',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'any',
+                    notNull: true
+                },
+                {
+                    name: 'param2',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param3',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param4',
+                    columnType: 'INTEGER',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('parse select with param (tablelist)', () => {
+        const sql = `
+        SELECT t3.id, t2.name, t1.value, ? as param1
+        FROM mytable1 t1, mytable2 t2, mytable3 t3
+        WHERE t3.id > ? and t1.value = ? and t2.name = ?
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't3'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: true, //where t2.name = ?; cannot be null
+                    table: 't2'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: true, //where t1.value = ?; cannot be null
+                    table: 't1'
+                },
+                {
+                    name: 'param1',
+                    notNull: true,
+                    type: 'any',
+                    table: ''
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'any',
+                    notNull: true
+                },
+                {
+                    name: 'param2',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param3',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param4',
+                    columnType: 'TEXT',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('parse a select with tablelist', () => {
+        const sql = `
+        SELECT t1.id, t2.name
+        FROM mytable1 t1, mytable2 t2
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('parse a select with tablelist (not ambiguous)', () => {
+        // Column 'name' exists only on mytable2
+        const sql = `
+        SELECT name FROM mytable1, mytable2
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    // it('parse a select with tablelist (ambiguous)', () => {
+    // 	// Column 'id' exists on mytable1 and mytable2
+    // 	const sql = `
+    //     SELECT id FROM mytable1, mytable2
+    //     `
+    // 	const actual = parseSql(sql, sqliteDbSchema);
+    // 	const expected: TypeSqlError = {
+    // 		name: 'Invalid sql',
+    // 		description: `Column \'id\' in field list is ambiguous`
+    // 	}
+    // 	if (isRight(actual)) {
+    // 		assert.fail(`Should return an error`);
+    // 	}
+    // 	assert.deepStrictEqual(actual.left, expected);
+    // })
+    it('parse a select with tablelist (unreferenced alias)', () => {
+        // Column 'name' exists only on mytable2
+        const sql = `
+        SELECT name as fullname FROM mytable1 t1, mytable2 t2
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'fullname',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('parse a select with tablelist and subquery', () => {
+        // Column 'name' exists only on mytable2
+        const sql = `
+        SELECT name FROM (select t1.*, t2.name from mytable1 t1, mytable2 t2) t
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('parse a query with extras parenteses', () => {
+        const sql = `
+        select name from ((( mytable1, (select * from mytable2) t )))
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('parse a query with duplicated names', () => {
+        const sql = `
+        select t1.id, t2.id, t1.value as name, t2.name, t1.id, name as descr
+        from mytable1 t1
+        inner join mytable2 t2 on t1.id = t2.id
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        //Add the sufix _2, _3 to the duplicated names
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'id', //TODO - rename field
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'INTEGER',
+                    notNull: false,
+                    table: 't1'
+                },
+                {
+                    name: 'name', //TODO - rename field
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'id', //TODO - rename field
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('select * from inner join using', () => {
+        const sql = `
+        SELECT *
+        FROM mytable1 t1
+        INNER JOIN mytable2 t2 using(id)
+        WHERE name is not null and value > 0
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('select * from inner join using (id) and table alias', () => {
+        const sql = `
+        SELECT *
+        FROM mytable1 t1
+        INNER JOIN mytable2 t2 using(id)
+        WHERE t2.name is not null and t1.value > 0
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('select * from inner join using (id, name)', () => __awaiter(void 0, void 0, void 0, function* () {
+        const sql = `
+        SELECT *
+        FROM mytable2 t1
+        INNER JOIN mytable2 t2 using (id, name)
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false, //TODO - using(id, name) makes the name notNull
+                    table: 't1'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't1'
+                },
+                {
+                    name: 'descr', //TODO - must rename
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    }));
+    it('multipleRowsResult must be true with inner join WHERE t1.id = 1', () => {
+        const sql = `
+        SELECT t1.id, t1.name
+        FROM mytable2 t1
+        INNER JOIN mytable2 t2 ON t2.id = t1.id
+        WHERE t1.id = 1
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't1'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('SELECT mytable1.id, mytable2.id is not null as hasOwner', () => {
+        const sql = `
+        SELECT
+            mytable1.id,
+            mytable2.id is not null as hasOwner
+        FROM mytable1
+        LEFT JOIN mytable2 ON mytable1.id = mytable2.id
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 'mytable1'
+                },
+                {
+                    name: 'hasOwner',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: ''
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('multipleRowsResult=false to LIMIT 1', () => {
+        //mytable1 (id, value); mytable2 (id, name, descr)
+        const sql = `
+        SELECT *
+        FROM mytable1 t1
+        INNER JOIN mytable2 t2 on t2.id = t1.id
+        LIMIT 1
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: false,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't1'
+                },
+                {
+                    name: 'value',
+                    type: 'INTEGER',
+                    notNull: false,
+                    table: 't1'
+                },
+                {
+                    name: 'id', //TODO - rename fields
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 -  SELECT * FROM mytable2_fts fts2', () => {
+        const sql = `
+        SELECT *
+        FROM mytable2_fts fts2
+        WHERE mytable2_fts match ?
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'any',
+                    notNull: false,
+                    table: 'fts2'
+                },
+                {
+                    name: 'name',
+                    type: 'any',
+                    notNull: false,
+                    table: 'fts2'
+                },
+                {
+                    name: 'descr',
+                    type: 'any',
+                    notNull: false,
+                    table: 'fts2'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'TEXT',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - WHERE mytable2_fts match :match', () => {
+        const sql = `
+        SELECT t2.*
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match ?
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'TEXT',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - SELECT t2.*, rank', () => {
+        const sql = `
+        SELECT t2.*, rank
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match ?
+		ORDER BY rank
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'rank',
+                    type: 'REAL',
+                    notNull: true,
+                    table: 'fts2'
+                }
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'TEXT',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - ORDER BY rank', () => {
+        const sql = `
+        SELECT *
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match 'one'
+		ORDER BY rank
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 't2'
+                },
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: false, //TODO - should be true: on fts2.id = t2.id
+                    table: 'fts2'
+                },
+                {
+                    name: 'name',
+                    type: 'any',
+                    notNull: false,
+                    table: 'fts2'
+                },
+                {
+                    name: 'descr',
+                    type: 'any',
+                    notNull: false,
+                    table: 'fts2'
+                },
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - highlight', () => {
+        const sql = `
+        SELECT 
+			t2.id, 
+			highlight(mytable2_fts, 1, '<b>', '</b>') as name,
+			highlight(mytable2_fts, 2, '<b>', '</b>') as descr
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match 'one'
+		ORDER BY rank
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - hightlight with parameters', () => {
+        const sql = `
+        SELECT 
+			t2.id, 
+			highlight(mytable2_fts, ?, ?, ?) as name,
+			highlight(mytable2_fts, ?, ?, ?) as descr
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match 'one'
+		ORDER BY rank
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param2',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param3',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param4',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param5',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param6',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - snippet', () => {
+        const sql = `
+        SELECT 
+			t2.id, 
+			snippet(mytable2_fts, 1, '<b>', '</b>', '...', 10) as name,
+			snippet(mytable2_fts, 2, '<b>', '</b>', '...', 10) as descr
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match 'one'
+		ORDER BY rank
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - snippet with parameters', () => {
+        const sql = `
+        SELECT 
+			t2.id, 
+			snippet(mytable2_fts, ?, ?, ?, ?, ?) as name,
+			snippet(mytable2_fts, ?, ?, ?, ?, ?) as descr
+        FROM mytable2 t2
+        INNER JOIN mytable2_fts fts2 on fts2.id = t2.id
+        WHERE mytable2_fts match 'one'
+		ORDER BY rank
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'INTEGER',
+                    notNull: true,
+                    table: 't2'
+                },
+                {
+                    name: 'name',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'descr',
+                    type: 'TEXT',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param2',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param3',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param4',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param5',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param6',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+                {
+                    name: 'param7',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param8',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param9',
+                    columnType: 'TEXT',
+                    notNull: true
+                },
+                {
+                    name: 'param10',
+                    columnType: 'INTEGER',
+                    notNull: true
+                },
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it(`FTS5 - SELECT * FROM mytable2_fts('one')`, () => {
+        const sql = `
+        SELECT * FROM mytable2_fts('one')
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'any',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'name',
+                    type: 'any',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'descr',
+                    type: 'any',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+            ],
+            parameters: []
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+    it('FTS5 - SELECT * FROM mytable2_fts(?)', () => {
+        const sql = `
+        SELECT * FROM mytable2_fts(?)
+        `;
+        const actual = (0, parser_1.parseSql)(sql, create_schema_1.sqliteDbSchema);
+        const expected = {
+            sql,
+            queryType: 'Select',
+            multipleRowsResult: true,
+            columns: [
+                {
+                    name: 'id',
+                    type: 'any',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'name',
+                    type: 'any',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+                {
+                    name: 'descr',
+                    type: 'any',
+                    notNull: false,
+                    table: 'mytable2_fts'
+                },
+            ],
+            parameters: [
+                {
+                    name: 'param1',
+                    columnType: 'TEXT',
+                    notNull: true
+                }
+            ]
+        };
+        if ((0, Either_1.isLeft)(actual)) {
+            node_assert_1.default.fail(`Shouldn't return an error: ${actual.left.description}`);
+        }
+        node_assert_1.default.deepStrictEqual(actual.right, expected);
+    });
+});
+//# sourceMappingURL=sqlite-parse-select-multiples-tables.test.js.map
