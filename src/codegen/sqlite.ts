@@ -18,6 +18,8 @@ import type {
 	TypeSqlError
 } from '../types';
 import type { SQLiteType } from '../sqlite-query-analyzer/types';
+
+const INSERT_RETURNING_NO_ROWS_ERROR = 'INSERT ... RETURNING returned no rows';
 import type { Field2 } from '../sqlite-query-analyzer/sqlite-describe-nested-query';
 import { type RelationType2, type TsField2, mapToTsRelation2 } from '../ts-nested-descriptor';
 import { preprocessSql } from '../describe-query';
@@ -862,11 +864,7 @@ function writeExecFunction(writer: CodeBlockWriter, client: SQLiteClient, params
 
 				if (queryType === 'Select') {
 					writer.indent().write('.then(res => res.rows)').newLine();
-					if (multipleRowsResult) {
-						writer.indent().write(`.then(rows => rows.map(row => mapArrayTo${resultTypeName}(row)));`);
-					} else {
-						writer.indent().write(`.then(rows => rows.length > 0 ? mapArrayTo${resultTypeName}(rows[0]) : null);`);
-					}
+					writeRowsResultMapping(writer, resultTypeName, multipleRowsResult);
 				}
 				if (queryType === 'Insert' && returning) {
 					writer.indent().write('.then(res => res.rows)').newLine();
@@ -879,11 +877,7 @@ function writeExecFunction(writer: CodeBlockWriter, client: SQLiteClient, params
 				}
 				if ((queryType === 'Update' || queryType === 'Delete') && returning) {
 					writer.indent().write('.then(res => res.rows)').newLine();
-					if (multipleRowsResult) {
-						writer.indent().write(`.then(rows => rows.map(row => mapArrayTo${resultTypeName}(row)));`);
-					} else {
-						writer.indent().write(`.then(rows => rows.length > 0 ? mapArrayTo${resultTypeName}(rows[0]) : null);`);
-					}
+					writeRowsResultMapping(writer, resultTypeName, multipleRowsResult);
 				}
 				if ((queryType === 'Update' || queryType === 'Delete' || queryType === 'Insert') && !returning) {
 					writer.indent().write(`.then(res => mapArrayTo${resultTypeName}(res));`);
@@ -943,11 +937,7 @@ function writeExecFunction(writer: CodeBlockWriter, client: SQLiteClient, params
 
 				if (queryType === 'Select') {
 					writer.indent().write('.raw({ columnNames: false })').newLine();
-					if (multipleRowsResult) {
-						writer.indent().write(`.then(rows => rows.map(row => mapArrayTo${resultTypeName}(row)));`);
-					} else {
-						writer.indent().write(`.then(rows => rows.length > 0 ? mapArrayTo${resultTypeName}(rows[0]) : null);`);
-					}
+					writeRowsResultMapping(writer, resultTypeName, multipleRowsResult);
 				}
 				if (queryType === 'Insert' && returning) {
 					writer.indent().write('.raw({ columnNames: false })').newLine();
@@ -960,11 +950,7 @@ function writeExecFunction(writer: CodeBlockWriter, client: SQLiteClient, params
 				}
 				if ((queryType === 'Update' || queryType === 'Delete') && returning) {
 					writer.indent().write('.raw({ columnNames: false })').newLine();
-					if (multipleRowsResult) {
-						writer.indent().write(`.then(rows => rows.map(row => mapArrayTo${resultTypeName}(row)));`);
-					} else {
-						writer.indent().write(`.then(rows => rows.length > 0 ? mapArrayTo${resultTypeName}(rows[0]) : null);`);
-					}
+					writeRowsResultMapping(writer, resultTypeName, multipleRowsResult);
 				}
 				if ((queryType === 'Insert' || queryType === 'Update' || queryType === 'Delete') && !returning) {
 					writer.indent().write('.run()').newLine();
@@ -978,6 +964,18 @@ function writeExecFunction(writer: CodeBlockWriter, client: SQLiteClient, params
 			return;
 		default:
 			return client satisfies never;
+	}
+}
+
+// TODO(T17): the `multipleRowsResult === true` branch below is currently UNREACHABLE for U/D/INSERT
+// RETURNING because src/sqlite-query-analyzer/parser.ts hardcodes the flag to false for all DML
+// (B5/B6). Branch is correct-by-construction (V3/V8) but dead until T17 lands the analyzer fix.
+// Do not delete — removing it now would force a re-derivation when T17 lands.
+function writeRowsResultMapping(writer: CodeBlockWriter, resultTypeName: string, multipleRowsResult: boolean): void {
+	if (multipleRowsResult) {
+		writer.indent().write(`.then(rows => rows.map(row => mapArrayTo${resultTypeName}(row)));`);
+	} else {
+		writer.indent().write(`.then(rows => rows.length > 0 ? mapArrayTo${resultTypeName}(rows[0]) : null);`);
 	}
 }
 
